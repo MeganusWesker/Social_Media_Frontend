@@ -44,6 +44,46 @@ export const useMessageAndErrorUser=(navigation,dispatch,navigationTo)=>{
       return loading;
 }
 
+export const useMessageAndErrorChat=(navigation,dispatch,navigationTo,isResetNeeded)=>{
+  const {createConverSationLoading,error,message} =useSelector(state=>state.chat);
+
+  useEffect(()=>{
+
+      if(error){
+    
+          Toast.show({
+            type: 'error',
+            text1: error,
+          });
+    
+          dispatch({
+            type:"clearError"
+          })
+      }
+    
+      if(message){
+    
+        Toast.show({
+          type: 'success',
+          text1: message,
+        });
+
+        
+    
+        isResetNeeded ?  navigation.reset({
+          index:0,
+          routes: [{ name: navigationTo }],
+        }):navigation.navigate(navigationTo);
+    
+        dispatch({
+          type:"clearMessage"
+        })
+      }
+    
+    },[error,message,dispatch]);
+
+    return createConverSationLoading;
+}
 
 export const useMessageAndErrorUserWithoutNavigating=(dispatch)=>{
   const {error,message} =useSelector(state=>state.user);

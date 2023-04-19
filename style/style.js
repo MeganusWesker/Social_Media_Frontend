@@ -14,6 +14,7 @@ export const colors = {
     color7:"rgba(217, 199, 208, 0.8)",
     color8:'rgba(39, 39, 39, 0.27)',
     color9: "#c70049",
+    color10: "rgba(113, 122, 138, 0.3)"
 };
 
 export const defaultStyle = StyleSheet.create({

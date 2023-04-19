@@ -9,9 +9,6 @@ import * as ImagePicker from "expo-image-picker";
 const CameraComponent = ({ navigation, route }) => {
 
   
-
-
-
   const [type, setType] = useState(CameraType.back);
   const [hasPermission, setHasPermission] = useState(null);
   const [camera, setCamera] = useState(null);

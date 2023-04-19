@@ -1,80 +1,59 @@
-import { ScrollView, View,Dimensions,TextInput  } from 'react-native'
-import React, {useEffect, useState } from 'react'
-import { colors, defaultImg, defaultStyle, flexBoxBasic } from '../style/style'
-import { Avatar,   } from 'react-native-paper'
-import SearchItem from '../Components/SearchItem';
-import {useDispatch, useSelector} from "react-redux";
-import { getAllSearchedUsers } from '../redux/actions/userAction';
+import { ScrollView, View, Dimensions, TextInput } from "react-native";
+import React, { useEffect, useState } from "react";
+import { colors, defaultImg, defaultStyle, flexBoxBasic } from "../style/style";
+import { Avatar } from "react-native-paper";
+import SearchItem from "../Components/SearchItem";
+import { useDispatch, useSelector } from "react-redux";
+import { getAllSearchedUsers } from "../redux/actions/userAction";
 
 const size = Dimensions.get("screen").width;
 
-const users=[
+const Search = ({ navigation }) => {
+  const [keyword, setKeyword] = useState("");
+  const [searchBackGroundColor, setSearchBackGroundColor] = useState(
+    colors.color5
+  );
+  const [searchBorderColor, setSearchBorderColor] = useState(colors.color5);
+  const [magnifyIconColor, setMagnifyIconColor] = useState(colors.color3);
 
-{
-    name:"MeganusWesker",
-    _id:"kdjfkj3874837847",
-    userName:"Meganus420",
-    avatar:{
-        public_id:"dkjfkdjfj",
-        url:"https://assets.mycast.io/actor_images/actor-albert-wesker-129687_large.jpg?1601199635"
+  const { searchedUsers } = useSelector((state) => state.user);
+  const dispatch = useDispatch();
+
+  const ToggleColor = () => {
+    searchBackGroundColor === colors.color5
+      ? setSearchBackGroundColor(colors.color2)
+      : setSearchBackGroundColor(colors.color5);
+    searchBorderColor === colors.color5
+      ? setSearchBorderColor(colors.color1)
+      : setSearchBorderColor(colors.color5);
+    magnifyIconColor === colors.color3
+      ? setMagnifyIconColor(colors.color1)
+      : setMagnifyIconColor(colors.color3);
+  };
+
+  useEffect(() => {
+    // # Debouncing
+    if (keyword !== "") {
+      const timeOutId = setTimeout(() => {
+        dispatch(getAllSearchedUsers(keyword));
+      }, 2000);
+
+      return () => {
+        clearTimeout(timeOutId);
+      };
     }
-},
-
-{
-    name:"Wesker",
-    _id:"kdjfkj387dfdf4837847",
-    userName:"Wesker420",
-    avatar:{
-        public_id:"dkjfkdjfj",
-        url:"https://assets.mycast.io/actor_images/actor-albert-wesker-129687_large.jpg?1601199635"
-    }
-},
-
-];
-
-const Search = ({navigation}) => {
-
-    const [keyword,setKeyword] =useState("");
-    const [searchBackGroundColor, setSearchBackGroundColor] = useState(
-      colors.color5
-    );
-    const [searchBorderColor, setSearchBorderColor] = useState(colors.color5);
-    const [magnifyIconColor, setMagnifyIconColor] = useState(colors.color3);
-    
-    const {searchedUsers} =useSelector(state=>state.user);
-    const dispatch=useDispatch();
-  
-    const ToggleColor = () => {
-      searchBackGroundColor === colors.color5
-        ? setSearchBackGroundColor(colors.color2)
-        : setSearchBackGroundColor(colors.color5);
-      searchBorderColor === colors.color5
-        ? setSearchBorderColor(colors.color1)
-        : setSearchBorderColor(colors.color5);
-      magnifyIconColor === colors.color3
-        ? setMagnifyIconColor(colors.color1)
-        : setMagnifyIconColor(colors.color3);
-    };
-
-
-    useEffect(() => {
-  
-      dispatch(getAllSearchedUsers(keyword));
-    }, [dispatch,keyword])
-    
-
+  }, [dispatch, keyword]);
 
   return (
     <View
-        style={{
-            ...defaultStyle,
-            flex:1,
-          
-        }}      
+      style={{
+        ...defaultStyle,
+        flex: 1,
+      }}
     >
-       {/* SearchBar Start */}
+      {/* SearchBar Start */}
 
-       <View
+      <View
         style={{
           ...flexBoxBasic,
           justifyContent: "flex-start",
@@ -113,36 +92,26 @@ const Search = ({navigation}) => {
 
       {/* SearchBar end */}
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View
+          style={{
+            marginVertical: 20,
+          }}
         >
-            <View
-              style={{
-                marginVertical:20,
-              }}
-            >
-
-            {searchedUsers.map((item,i)=>(
-                <SearchItem
-                  
-                  name={item.name}
-                  _id={item._id}
-                  key={item._id}
-                  userName={item.userName}
-                  navigation={navigation}
-                  avatar={item.avatar.url !==null ? item.avatar.url :defaultImg }
-                />
-            ))}
-
-            </View>
-
-
-
-
-        </ScrollView>
-      
+          {searchedUsers.map((item, i) => (
+            <SearchItem
+              name={item.name}
+              _id={item._id}
+              key={item._id}
+              userName={item.userName}
+              navigation={navigation}
+              avatar={item.avatar.url !== null ? item.avatar.url : defaultImg}
+            />
+          ))}
+        </View>
+      </ScrollView>
     </View>
-  )
-}
+  );
+};
 
-export default Search
+export default Search;

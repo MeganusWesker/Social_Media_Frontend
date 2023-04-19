@@ -11,5 +11,6 @@ export const store = configureStore({
   },
 });
 
+//https://social-media-backend-eight.vercel.app/api/v1
 
 export const server =`https://social-media-backend-eight.vercel.app/api/v1`;

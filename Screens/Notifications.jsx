@@ -39,6 +39,7 @@ const Notifications = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           marginVertical: 20,
+          paddingBottom:20,
         }}
       >
         {myNotifications &&
@@ -51,6 +52,8 @@ const Notifications = ({ navigation }) => {
                 key={item._id}
                 userId={item.user._id}
                 notificationMessage={item.notificationMessage}
+                navigateTo={item.isPostNotification ? "Post" : "SearchedUserProfile"}
+                paramsToSend={item.isPostNotification ? {postId:item.postId} :{userId:item.user._id}}
                 createdAt={()=>dateCalculator(item.createdAt)}
               />
             ))}

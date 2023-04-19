@@ -1,9 +1,7 @@
-import { View, Text,Dimensions, TouchableOpacity} from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import React from "react";
 import { Avatar } from "react-native-paper";
-import { colors, flexBoxBasic } from "../style/style";
-
-const size = Dimensions.get("screen").width;
+import { colors } from "../style/style";
 
 const NotificationsComponent = ({
   userName,
@@ -13,66 +11,61 @@ const NotificationsComponent = ({
   notificationMessage,
   createdAt,
   userId,
+  navigateTo,
+  paramsToSend
 }) => {
-
-  console.log(userId);
   return (
-    <View
-      style={{
-        ...flexBoxBasic,
-        width: size - 50,
-        alignSelf: "center",
-        marginVertical: 12,
-      }}
+    <TouchableOpacity
+      style={styles.container}
+      onPress={() => navigation.navigate(navigateTo,{postId:paramsToSend.postId,userId:paramsToSend.userId})}
+      activeOpacity={0.9}
     >
       <Avatar.Image
         size={50}
         source={{
           uri: avatar,
         }}
+        style={styles.avatar}
       />
-
-      <View
-        style={{
-          ...flexBoxBasic,
-          justifyContent: "flex-start",
-        }}
-      >
-        <TouchableOpacity
-          onPress={() =>
-            navigation.navigate("SearchedUserProfile", {userId})
-          }
-          activeOpacity={0.9}
-        >
-          <Text
-            style={{
-              fontWeight: "800",
-
-            }}
-          >
-            {userName}
-          </Text>
-        </TouchableOpacity>
-
-        <Text
-          style={{
-            color: colors.color8,
-            marginLeft:5,
-          }}
-        >
-          {notificationMessage}
-        </Text>
+      <View style={styles.content}>
+        <Text style={styles.title}>{userName}</Text>
+        <Text style={styles.message}>{notificationMessage}</Text>
+        <Text style={styles.timestamp}>{createdAt()}</Text>
       </View>
-
-      <Text
-        style={{
-          color: colors.color8,
-        }}
-      >
-        {createdAt()}
-      </Text>
-    </View>
+    </TouchableOpacity>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.color6,
+  },
+  avatar: {
+    marginRight: 12,
+  },
+  content: {
+    flex: 1,
+  },
+  title: {
+    fontWeight: "bold",
+    fontSize: 16,
+    marginBottom: 4,
+    color: colors.color3,
+  },
+  message: {
+    fontSize: 14,
+    marginBottom: 4,
+    color: colors.color10,
+  },
+  timestamp: {
+    fontSize: 12,
+    color: colors.color8,
+  },
+});
 
 export default NotificationsComponent;

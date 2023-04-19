@@ -5,8 +5,9 @@ import {
   Dimensions,
   ScrollView,
   TextInput,
+  Image,
 } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   colors,
   defaultImg,
@@ -23,30 +24,36 @@ import {
 } from "../redux/actions/chatAction";
 import Loader from "../Components/Loader";
 import MessageComponent from "../Components/MessageComponent";
-import { format } from "timeago.js";
 import socket from "../utils/socket";
 import mime from "mime";
 import { dateCalculator } from "../utils/toggleFunctions";
-import { getMediaFromUserAndCreateIceServer } from "../utils/webRtc";
-import { RTCSessionDescription,RTCView } from 'react-native-webrtc';
+import { RTCIceCandidate, RTCView } from "react-native-webrtc";
+import { mediaDevices } from "react-native-webrtc";
+import peerConnection from "../utils/webrtcClass";
 
 const size = Dimensions.get("screen").width;
 
+let remoteCandidates = [];
 
 const ChatBox = ({ navigation, route: { params } }) => {
   const [toggleBorderColorName, setToggleBorderColorName] = useState(
     colors.color8
   );
-
+  isBackendMessage;
   const [textMessage, setTextMessage] = useState("");
-  const [incomingCall, setIncomingCall] = useState(false);
-  const [recievedOffer, setRecievedOffer] = useState(null);
-  const [localMediaStreamObject, setLocalMediaStreamObject] = useState(null);
-  const [peerConnectionObj, setPeerConnectionObj] = useState(null);
   const [imageMessage, setImageMessage] = useState("");
   const [imagePath, setImagePath] = useState("");
   const [allMessages, setAllMessages] = useState([]);
   const [arrivalMessage, setArrivalMessage] = useState(null);
+  const [callUser, setCallUser] = useState(true);
+  const [isVisible, setVisible] = useState(false);
+  const [isBackendMessage, setIsBackendMessage] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [height, setHeight] = useState(0);
+
+
+
+  const [isFrontCam, setIsFrontCam] = useState(true);
 
   const verticalScrollView = useRef(null);
 
@@ -82,80 +89,18 @@ const ChatBox = ({ navigation, route: { params } }) => {
   const submitHandler = async () => {
     socket.emit("sendMessage", user._id, params.userId, textMessage);
 
-    await dispatch(sendMessage(params.converSationId, textMessage,params.userId));
+    await dispatch(
+      sendMessage(params.converSationId, textMessage, params.userId)
+    );
 
     setTextMessage("");
   };
 
-  const createOffer = async() =>{
-
-    const {peerConnection,localMediaStream} = await getMediaFromUserAndCreateIceServer();
-
-    setLocalMediaStreamObject(localMediaStream);
-    setPeerConnectionObj(peerConnection);
-
-    console.log(`consolin from createoffer:${peerConnectionObj}`);
-
-    console.log(`console from chatBox:${localMediaStreamObject}`);
-  
-    let sessionConstraints = {
-      mandatory: {
-        OfferToReceiveAudio: true,
-        OfferToReceiveVideo: true,
-        VoiceActivityDetection: true
-      }
-    };
-  
-    try {
-      const offerDescription = await peerConnection.createOffer(sessionConstraints);
-      await peerConnection.setLocalDescription(offerDescription);
-
-      socket.emit("CallUser", user._id, params.userId, offerDescription);
-  
-    
-    } catch (err) {
-      console.log(err)
-    }
-  }
-
-  const acceptOffer =async()=>{
-    try {
-      // Use the received offerDescription
-      const offerDescription = new RTCSessionDescription(recievedOffer);
-      const {peerConnection,localMediaStream} = await getMediaFromUserAndCreateIceServer();
-      setLocalMediaStreamObject(localMediaStream);
-      await peerConnection.setRemoteDescription( offerDescription );
-    
-      const answerDescription = await peerConnection.createAnswer();
-      await peerConnection.setLocalDescription(answerDescription);
-
-      socket.emit("sendOfferAnswer", user._id, params.userId,answerDescription );
-    
-      
-    } catch( err ) {
-      console.log(err);
-    }
-  }
-
-  const setRemoteAns=async(offerAns)=>{
-    await peerConnectionObj.setRemoteDescription(offerAns);
-  }
-
-
-  useEffect(() => {
-    socket.on("getOffer", (data) => {
-      setIncomingCall(true);
-      setRecievedOffer(data.offerDescription);
-    });
-  }, []);
-
-  useEffect(() => {
-    socket.on("getOfferAnswer", async(data) => {
-       await setRemoteAns(data.answerDescription);
-       console.log("setRemoteAns log:",data.answerDescription);
-    });
-  }, []);
-
+  // const valueProviderForPopUp = (image, isBackendMessage) => {
+  //   setVisible(true);
+  //   setImageUrl(image);
+  //   setIsBackendMessage(isBackendMessage);
+  // };
 
   useEffect(() => {
     socket.on("getMessage", (data) => {
@@ -170,8 +115,6 @@ const ChatBox = ({ navigation, route: { params } }) => {
 
   useEffect(() => {
     socket.on("getImageMessage", (data) => {
-
-
       setArrivalMessage({
         senderId: data.senderId,
         image: {
@@ -201,16 +144,12 @@ const ChatBox = ({ navigation, route: { params } }) => {
   //   }
   // }, [arrivalMessage, verticalScrollView]);
 
-  console.log(`consolling localMedia :${localMediaStreamObject?.toURL()}`)
-
   useEffect(() => {
     dispatch(getAllMessageOfConverSation(params.converSationId));
   }, [dispatch, params.converSationId]);
 
   useEffect(() => {
     if (params.image) {
-
-
       socket.emit(
         "addImageMessage",
         user._id,
@@ -219,81 +158,98 @@ const ChatBox = ({ navigation, route: { params } }) => {
         params.image
       );
 
-      const myForm=new FormData();
-      myForm.append('conversationId',params.converSationId);
-      myForm.append('isImageMessage',true);
-      myForm.append('recieverId',params.userId);
+      const myForm = new FormData();
+      myForm.append("conversationId", params.converSationId);
+      myForm.append("isImageMessage", true);
+      myForm.append("recieverId", params.userId);
 
-        myForm.append('file',{
-          uri:params.imageUrl,
-          type:mime.getType(params.imageUrl),
-          name:params.imageUrl.split('/').pop(),
-        })
+      myForm.append("file", {
+        uri: params.imageUrl,
+        type: mime.getType(params.imageUrl),
+        name: params.imageUrl.split("/").pop(),
+      });
 
       dispatch(sendImageMessage(myForm));
     }
-  }, [params.image,dispatch]);
+  }, [params.image, dispatch]);
 
   return getMyAllConversationLoading ? (
     <Loader />
   ) : (
+
+    <>
+    
+    {/* {isVisible && (
+        <View
+          style={{
+            position: "absolute",
+            zIndex:5,
+            width: Dimensions.get("window").width,
+            height: Dimensions.get("window").height,
+            alignSelf: "center",
+            alignItems:'center',
+            justifyContent:"center",
+          }}
+        >
+                <TouchableOpacity
+        onPress={()=>setVisible(false)}
+        activeOpacity={0.5}
+      >
+
+        <Avatar.Icon
+          icon={'close'}
+          size={35}
+          style={{
+            backgroundColor:colors.color3,
+            position:'absolute',
+            right:-20,
+            top:50,
+            zIndex:10,
+          }}
+
+          color={colors.color3}
+        
+        />
+
+      </TouchableOpacity>
+
+
+          <Image
+            source={{
+              uri: isBackendMessage
+                ? imageUrl
+                : "data:image/jpeg;base64," + imageUrl,
+            }}
+            style={{
+              width: Dimensions.get("window").width - 50,
+              height: Dimensions.get("window").height - 100,
+              resizeMode: "contain",
+              borderRadius: 10,
+            }}
+          />
+        </View>
+      )} */}
+      
     <View
       style={{
         ...defaultStyle,
         padding: 0,
       }}
     >
-
-      {
-        localMediaStreamObject && (
-            <RTCView
-            mirror={true}
-            objectFit={'cover'}
-            streamURL={localMediaStreamObject.toURL()}
-            zOrder={10}
-            style={{
-              width:300,
-              height:300,
-              position:'absolute',
-              top:10,
-              right:10,
-            }}
-        />
-        )
-      }
-
-
- 
-
+  
 
       <LikesHeader
         navigation={navigation}
         name={params.name}
         userName={params.userName}
         avatar={params.avatar.url}
-        videoCallHandler={createOffer}
+        videoCallHandler={() =>
+          navigation.navigate("VideoCallComponent", {
+            callUser,
+            userId: params.userId,
+          })
+        }
       />
-
-      {
-        incomingCall && (
-          <Button
-            mode={"text"}
-            textColor={colors.color1}
-            icon={'pencil'}
-            style={{
-              marginVertical:10,
-            }}
-  
-          onPress={acceptOffer}
-        >
-  
-          Accept Call
-  
-        </Button>
-        )
-      }
-
-
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -305,14 +261,19 @@ const ChatBox = ({ navigation, route: { params } }) => {
         {allMessages.length > 0 ? (
           allMessages.map((item) => (
             <MessageComponent
-              createdAt={()=>dateCalculator(item.createdAt)}
+              createdAt={() => dateCalculator(item.createdAt)}
               text={item.message}
               key={item._id}
               ourText={item.senderId === user._id}
               isImageMessage={item.isImageMessage}
               image={item.isImageMessage && item.image.url}
               isBackendMessage={item.isBackendMessage}
-           
+              // valueProviderForPopUp={() =>
+              //   valueProviderForPopUp(
+              //     item.isImageMessage && item.image.url,
+              //     item.isBackendMessage
+              //   )
+              // }
             />
           ))
         ) : (
@@ -333,7 +294,7 @@ const ChatBox = ({ navigation, route: { params } }) => {
           width: size - 30,
           borderRadius: 10,
           alignSelf: "center",
-          height: 45,
+          height: Math.max(45, height+20),
           marginBottom: 10,
         }}
       >
@@ -343,7 +304,7 @@ const ChatBox = ({ navigation, route: { params } }) => {
             navigation.navigate("Camera", {
               ...params,
               ChatBox: true,
-              base:true,
+              base: true,
             })
           }
         >
@@ -361,9 +322,12 @@ const ChatBox = ({ navigation, route: { params } }) => {
           value={textMessage}
           onChangeText={setTextMessage}
           placeholder={"send a message"}
+          multiline={true}
+          onContentSizeChange={(e)=> setHeight(e.nativeEvent.contentSize.height)}
           style={{
             fontSize: 18,
-            width: "80%",
+            width: "75%",
+            height: Math.max(35, height),
           }}
           onFocus={ToggleColor}
           onBlur={ToggleColor}
@@ -379,22 +343,32 @@ const ChatBox = ({ navigation, route: { params } }) => {
               backgroundColor: searchBackGroundColor,
               position: "absolute",
               top: -20,
-              right: -20,
+              right: -32,
             }}
           />
         </TouchableOpacity>
       </View>
     </View>
+
+    </>
   );
 };
 
-const LikesHeader = ({ navigation, name, userName, avatar,videoCallHandler }) => (
+const LikesHeader = ({
+  navigation,
+  name,
+  userName,
+  avatar,
+  videoCallHandler,
+  swapCameraHandler,
+  hangUpHandler,
+}) => (
   <View
     style={{
       ...flexBoxBasic,
       justifyContent: "flex-start",
       width: size - 10,
-      zIndex: 4,
+      zIndex: 10,
       backgroundColor: colors.color2,
       borderWidth: 2,
       borderColor: colors.color2,
@@ -438,31 +412,28 @@ const LikesHeader = ({ navigation, name, userName, avatar,videoCallHandler }) =>
 
       <Text
         style={{
-          color: colors.color7,
+          color: colors.color8,
         }}
       >
         {userName}
       </Text>
     </View>
 
-    <View>
-
-      <TouchableOpacity
-         onPress={videoCallHandler}
-         activeOpacity={0.9}
-      >
-
-      <Avatar.Icon
-            size={40}
-            icon={'video'}
-        
-            style={{
-               backgroundColor:colors.color2
-            }}
+    <View
+      style={{
+        position: "absolute",
+        right: 10,
+      }}
+    >
+      <TouchableOpacity onPress={videoCallHandler} activeOpacity={0.9}>
+        <Avatar.Icon
+          size={40}
+          icon={"video"}
+          style={{
+            backgroundColor: colors.color2,
+          }}
         />
       </TouchableOpacity>
-
-
     </View>
   </View>
 );

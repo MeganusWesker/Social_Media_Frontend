@@ -6,6 +6,8 @@ export const userReducer=createReducer({
     searchedUser:{},
     user:{},
     isAuthenticated:false,
+    notification:false,
+    messageNotification:false,
 },(builder)=>{
 
     // login function
@@ -109,34 +111,34 @@ export const userReducer=createReducer({
          // forgotPassword function
 
          builder.addCase("forgotPasswordRequest",(state)=>{
-            state.loading=true;
+            state.forgotPasswordloading=true;
             state.isAuthenticated=false;
         });
     
         builder.addCase("forgotPasswordSuccess",(state,action)=>{
-            state.loading=false;
+            state.forgotPasswordloading=false;
             state.message=action.payload;
         });
     
         builder.addCase("forgotPasswordFail",(state,action)=>{
-            state.loading=false;
+            state.forgotPasswordloading=false;
             state.error=action.payload;
         });
 
           // resetPassword function
 
         builder.addCase("resetPasswordRequest",(state)=>{
-            state.loading=true;
+            state.resetPasswordloading=true;
             state.isAuthenticated=false;
         });
     
         builder.addCase("resetPasswordSuccess",(state,action)=>{
-            state.loading=false;
+            state.resetPasswordloading=false;
             state.message=action.payload;
         });
     
         builder.addCase("resetPasswordFail",(state,action)=>{
-            state.loading=false;
+            state.resetPasswordloading=false;
             state.error=action.payload;
         });
 
@@ -237,8 +239,27 @@ export const userReducer=createReducer({
             builder.addCase("getMyAllNotificationsFail",(state,action)=>{
                 state.getMyAllNotificationsLoading=false;
                 state.error=action.payload;
-            });       
+            }); 
+            
+                // login function
 
+    builder.addCase("showNotificationIcon",(state)=>{
+        state.notification=true;
+    });
+
+    builder.addCase("hideNotificationIcon",(state)=>{
+        state.notification=false;
+    });
+
+    builder.addCase("showMessageNotificationIcon",(state)=>{
+        state.messageNotification=true;
+    });
+
+    builder.addCase("hideMessageNotificationIcon",(state)=>{
+        state.messageNotification=false;
+    });
+
+  
     //clearing functions
 
     builder.addCase("clearMessage",(state)=>{

@@ -7,6 +7,8 @@ import { getMyAllConversation, toggleMessageInConversation } from "../redux/acti
 const size = Dimensions.get("screen").width;
 
 const ChatComponent = ({ user, navigation, _id, lastMessage, newMessages,lastMessageTime,dispatch }) => {
+
+  console.log(lastMessage);
   let filteredUser = user()[0];
 
   const newMessagesLength = newMessages();

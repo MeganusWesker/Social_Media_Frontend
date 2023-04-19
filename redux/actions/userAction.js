@@ -19,6 +19,7 @@ export const login = (email, password) => async (dipatch) => {
             withCredentials: true,
         });
 
+
        
 
         dipatch({
@@ -145,7 +146,7 @@ export const forgotPassword = (email) => async (dipatch) => {
         });
 
       
-        const { data } = await axios.post(`${server}/user/forgotpassword`, {email},{
+        const { data } = await axios.post(`${server}/forgot/password`, {email},{
             headers: {
                 "Content-Type": "application/json",
             },
@@ -155,11 +156,10 @@ export const forgotPassword = (email) => async (dipatch) => {
        
 
         dipatch({
-            type: "forgotPasswordFail",
+            type: "forgotPasswordSuccess",
             payload: data.message,
         });
 
-    
     } catch (error) {
         dipatch({
             type: "registerUserFail",
@@ -177,7 +177,7 @@ export const resetPassword = (otp,password,confirmPassword) => async (dipatch) =
         });
 
       
-        const { data } = await axios.put(`${server}/user/password/reset`, {otp,password,confirmPassword},{
+        const { data } = await axios.put(`${server}/reset/password`, {otp,password,confirmPassword},{
             headers: {
                 "Content-Type": "application/json",
             },

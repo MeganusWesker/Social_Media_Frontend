@@ -48,46 +48,7 @@ const PostLikesScreen = ({
     >
       <LikesHeader navigation={navigation} />
 
-      {/* SearchBar Start */}
 
-      <View
-        style={{
-          ...flexBoxBasic,
-          justifyContent: "flex-start",
-          padding: 10,
-          backgroundColor: searchBackGroundColor,
-          borderColor: searchBorderColor,
-          borderWidth: 1,
-          width: size - 30,
-          borderRadius: 10,
-          alignSelf: "center",
-          height: 45,
-        }}
-      >
-        <Avatar.Icon
-          icon={"magnify"}
-          size={40}
-          color={magnifyIconColor}
-          style={{
-            backgroundColor: searchBackGroundColor,
-          }}
-        />
-
-        <TextInput
-          value={keyword}
-          onChangeText={setKeyword}
-          placeholder={"Search"}
-          style={{
-            fontSize: 18,
-            width: "80%",
-            marginLeft: 5,
-          }}
-          onFocus={ToggleColor}
-          onBlur={ToggleColor}
-        />
-      </View>
-
-      {/* SearchBar end */}
 
       <ScrollView showsVerticalScrollIndicator={false}
         contentContainerStyle={{

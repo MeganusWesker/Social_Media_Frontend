@@ -31,8 +31,6 @@ const Chat = ({ navigation }) => {
     (state) => state.chat
   );
 
-  
-
   const ToggleColor = () => {
     searchBackGroundColor === colors.color5
       ? setSearchBackGroundColor(colors.color2)
@@ -50,12 +48,12 @@ const Chat = ({ navigation }) => {
     return filteredUser;
   };
 
-  const findNewMessagesLength =(conversationMessages)=>{
-    let newMessages=conversationMessages.filter((item)=>item.isNewMessage ===true)
+  const findNewMessagesLength = (conversationMessages) => {
+    let newMessages = conversationMessages.filter(
+      (item) => item.isNewMessage === true
+    );
     return newMessages.length;
-  }
-
-  
+  };
 
   useEffect(() => {
     dispatch(getMyAllConversation());
@@ -68,7 +66,7 @@ const Chat = ({ navigation }) => {
       style={{
         ...defaultStyle,
         padding: 0,
-        backgroundColor:colors.color5,
+        backgroundColor: colors.color5,
       }}
     >
       <LikesHeader navigation={navigation} user={user} />
@@ -96,10 +94,23 @@ const Chat = ({ navigation }) => {
                 navigation={navigation}
                 key={item._id}
                 _id={item._id}
-                lastMessage={item.messages.length > 0 ? item.messages[item.messages.length-1].message : "Send Hi"}
-                lastMessageTime={item.messages.length > 0 ? ()=>dateCalculator(item.messages[item.messages.length-1].createdAt) :undefined}
-                newMessages={()=>findNewMessagesLength(item.messages)}
-                 dispatch={dispatch}
+                lastMessage={
+                  item.messages.length > 0
+                    ? item.messages[item.messages.length - 1].isImageMessage
+                      ? "Sent You a Image"
+                      : item.messages[item.messages.length - 1].message
+                    : "Send Hi"
+                }
+                lastMessageTime={
+                  item.messages.length > 0
+                    ? () =>
+                        dateCalculator(
+                          item.messages[item.messages.length - 1].createdAt
+                        )
+                    : undefined
+                }
+                newMessages={() => findNewMessagesLength(item.messages)}
+                dispatch={dispatch}
               />
             ))
           ) : (

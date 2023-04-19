@@ -1,7 +1,6 @@
-import { View, Text,Image,Dimensions} from "react-native";
-import React from "react";
+import { View, Text, Image, Dimensions, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
 import { colors } from "../style/style";
-
 
 const size = Dimensions.get("screen").width;
 
@@ -11,13 +10,9 @@ const MessageComponent = ({
   ourText,
   isImageMessage,
   image,
-  isBackendMessage
+  isBackendMessage,
 }) => {
 
- 
-  
-
- 
   return (
     <View
       style={{
@@ -35,16 +30,20 @@ const MessageComponent = ({
         }}
       >
         {isImageMessage ? (
+
             <Image
-           
-            source={{ uri:isBackendMessage ? image :'data:image/jpeg;base64,' + image }}
-            style={{
-               width:200,
-               height:200,
-               resizeMode:'contain',
-               borderRadius:10,
-            }}
-          />
+              source={{
+                uri: isBackendMessage
+                  ? image
+                  : "data:image/jpeg;base64," + image,
+              }}
+              style={{
+                width: 200,
+                height: 200,
+                resizeMode: "contain",
+                borderRadius: 10,
+              }}
+            />
         ) : (
           <Text
             style={{

@@ -30,6 +30,38 @@ export const getMyAllConversation = () => async (dipatch) => {
     }
 }
 
+export const createConversation = (members) => async (dipatch) => {
+
+    try {
+
+        dipatch({
+            type: "createConverSationRequest",
+        });
+
+      
+        const { data } = await axios.post(`${server}/conversation/new`,{members},{
+            headers: {
+                "Content-Type": "application/json",
+            },
+          withCredentials: true,
+        });
+
+       
+
+        dipatch({
+            type: "createConverSationSuccess",
+            payload: data.message,
+        });
+
+
+    } catch (error) {
+        dipatch({
+            type: "createConverSationFail",
+            payload: error.response.data.message,
+        });
+    }
+}
+
 export const getAllMessageOfConverSation = (id) => async (dipatch) => {
 
     try {

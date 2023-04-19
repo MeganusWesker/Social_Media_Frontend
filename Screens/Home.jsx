@@ -8,6 +8,8 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   getPostsOfFollowing,
   likeAndUnlikePost,
+  saveOrUnSavePost,
+  toggleNotification,
 } from "../redux/actions/postAction";
 import { useMessageAndErrorPostWithoutNavigating } from "../utils/customHooks";
 import { dateCalculator } from "../utils/toggleFunctions";
@@ -17,22 +19,50 @@ import { getNewMessageIndication } from "../redux/actions/chatAction";
 
 const Home = ({ navigation }) => {
   const [visible, setVisible] = useState(false);
-  const [userNewMessage, setUserNewMessage] = useState(false);
+  const [postOwner, setPostOwner] = useState("");
 
   const { posts } = useSelector((state) => state.post);
 
-  const { user } = useSelector((state) => state.user);
+  const { user, notification,messageNotification } = useSelector((state) => state.user);
 
-  const { newMessage,newMessageToggled } = useSelector((state) => state.chat);
+  const { newMessage, newMessageToggled } = useSelector((state) => state.chat);
+  const { error, message } = useSelector((state) => state.post);
 
   const dispatch = useDispatch();
 
-
   useMessageAndErrorPostWithoutNavigating(dispatch);
 
-  const likeUnlikePostHandler = async (id) => {
+  const likeUnlikePostHandler = async (id, postOwner) => {
     await dispatch(likeAndUnlikePost(id));
+    setPostOwner(postOwner);
     dispatch(getPostsOfFollowing());
+  };
+  const isNewNotifications=()=>{
+    const filteredArray=user.notifications.filter((item) =>item.isNewMessage ===true);
+   
+    if(filteredArray.length >0){
+      dispatch({
+        type:"showNotificationIcon",
+      })
+    }
+  }
+
+
+  const saveUnSavePostHandler = async (id) => {
+    await dispatch(saveOrUnSavePost(id));
+    dispatch(getPostsOfFollowing());
+  };
+
+  const isSavedChecker = (post) => {
+    let isLiked = false;
+
+    post.postSavedBy.forEach((item) => {
+      if (item === user._id) {
+        isLiked = true;
+      }
+    });
+
+    return isLiked;
   };
 
   const isLikedChecker = (post) => {
@@ -52,32 +82,43 @@ const Home = ({ navigation }) => {
     setVisible(false);
   };
 
-
-  const navigatorDispatcher=(navigateTo,newMessageFromElements)=>{
+  const navigatorDispatcher = (navigateTo, newMessageFromElements) => {
     navigation.navigate(navigateTo);
-    newMessageFromElements && dispatch(getNewMessageIndication());
-  }
+    newMessageFromElements ? dispatch(getNewMessageIndication()) : dispatch(toggleNotification());
+    newMessageFromElements? dispatch({
+      type:"hideMessageNotificationIcon"
+    }) : dispatch({
+      type:"hideNotificationIcon"
+    })
+  };
 
   useEffect(() => {
     socket.emit("addUser", user._id);
   }, [user]);
 
 
+
+  useEffect(() => {
+    if (user.newMessage) {
+      dispatch({
+        type:"showMessageNotificationIcon"
+      })
+    }
+  }, [user.newMessage]);
+
+  useEffect(() => {
+    if (message === "post like succesfully") {
+      socket.emit("notification", postOwner);
+    }
+  }, [message]);
+
   useEffect(()=>{
 
-    if(newMessageToggled){
-      setUserNewMessage(newMessage);
-    }
 
-  },[newMessageToggled]);
+    isNewNotifications();
 
-  useEffect(()=>{
+  },[user.notifications])
 
-    if(user.newMessage){
-      setUserNewMessage(user.newMessage);
-    }
-
-  },[user.newMessage]);
 
 
   return (
@@ -111,27 +152,38 @@ const Home = ({ navigation }) => {
               width: 80,
             }}
           >
-
             <TouchableOpacity
-               onPress={() => navigatorDispatcher('Notifications')}
-               activeOpacity={0.5}
-            >
-
-            <Avatar.Icon
-              icon={"bell-outline"}
-              size={35}
-              color={colors.color3}
-              style={{ backgroundColor: colors.color2 }}
-            />
-
-            </TouchableOpacity>
-    
-
-            <TouchableOpacity
-              onPress={() => navigatorDispatcher('Chats',userNewMessage)}
+              onPress={() => navigatorDispatcher("Notifications")}
               activeOpacity={0.5}
             >
-              {userNewMessage && (
+              { notification &&  (
+                <View
+                  style={{
+                    backgroundColor: colors.color9,
+                    height: 7,
+                    width: 7,
+                    borderRadius: 100,
+                    position: "absolute",
+                    right: 8,
+                    zIndex: 5,
+                    top: 6,
+                  }}
+                ></View>
+              )}
+
+              <Avatar.Icon
+                icon={"bell-outline"}
+                size={35}
+                color={colors.color3}
+                style={{ backgroundColor: colors.color2 }}
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => navigatorDispatcher("Chats",messageNotification)}
+              activeOpacity={0.5}
+            >
+              {messageNotification && (
                 <View
                   style={{
                     backgroundColor: colors.color9,
@@ -239,8 +291,13 @@ const Home = ({ navigation }) => {
                   likes={item.likes}
                   comments={item.comments}
                   navigation={navigation}
-                  likeHandler={() => likeUnlikePostHandler(item._id)}
+                  likeHandler={() =>
+                    likeUnlikePostHandler(item._id, item.owner._id)
+                  }
                   isLiked={() => isLikedChecker(item)}
+                  saveHandler={() => saveUnSavePostHandler(item._id)}
+                  isSaved={() => isSavedChecker(item)}
+                  postOwner={item.owner._id}
                 />
               ))}
           </View>

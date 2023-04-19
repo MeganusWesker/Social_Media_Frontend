@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import React, { useState } from "react";
 import { Avatar, Button } from "react-native-paper";
+import {useDispatch,useSelector} from "react-redux"
 import {
   colors,
   defaultStyle,
@@ -16,6 +17,8 @@ import {
 } from "../style/style";
 
 import { toggleColor } from "../utils/toggleFunctions";
+import { forgotPassword } from "../redux/actions/userAction";
+import { useMessageAndErrorUserWithoutNavigating } from "../utils/customHooks";
 
 const size = Dimensions.get("screen").width;
 
@@ -29,7 +32,17 @@ const ForgotPassword = ({
   const [toggleBorderColor, setToggleBorderColor] = useState(colors.color8);
   const [emailIconColor, setEmailIconColor] = useState(colors.color8);
 
-  
+  const {forgotPasswordloading} =useSelector((state)=>state.user);
+
+  const dispatch=useDispatch();
+
+  const submitHandler=async()=>{
+    await dispatch(forgotPassword(email));
+    sendOtp ? navigation.navigate("VerifyEmail") : navigation.navigate("ResetPassword");
+  }
+
+  useMessageAndErrorUserWithoutNavigating(dispatch);
+
 
   return (
     <View
@@ -114,6 +127,9 @@ const ForgotPassword = ({
             icon={"send"}
             textColor={colors.color2}
             mode="contained"
+            disabled={!email}
+            loading={forgotPasswordloading}
+            onPress={submitHandler}
           >
             Send Otp
           </Button>

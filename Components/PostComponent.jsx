@@ -20,6 +20,9 @@ const PostComponent = ({
   isLiked,
   isVideoPost,
   video,
+  saveHandler,
+  isSaved,
+  postOwner
 }) => {
   const videoRef = useRef(null);
   const [status, setStatus] = useState({});
@@ -95,23 +98,14 @@ const PostComponent = ({
             source={{
               uri: video,
             }}
-
             ref={videoRef}
-
-              style={{
-                width: 280,
-                height: 280,
-                borderRadius: 10,
-              
-              }}
-
-           
-
-              useNativeControls
-     
-              resizeMode="contain"
-
-
+            style={{
+              width: 280,
+              height: 280,
+              borderRadius: 10,
+            }}
+            useNativeControls
+            resizeMode="contain"
           />
         ) : (
           <Image
@@ -164,7 +158,12 @@ const PostComponent = ({
           </View>
 
           <View style={flexBoxBasic}>
-            <TouchableOpacity activeOpacity={0.5}>
+            <TouchableOpacity
+              activeOpacity={0.5}
+              onPress={() =>
+                navigation.navigate("Comments", { comments, postId: _id,avatar,userName,caption, postOwner})
+              }
+            >
               <Avatar.Icon
                 icon={"message-outline"}
                 size={40}
@@ -181,9 +180,9 @@ const PostComponent = ({
           </View>
         </View>
 
-        <TouchableOpacity activeOpacity={0.5}>
+        <TouchableOpacity activeOpacity={0.5} onPress={saveHandler}>
           <Avatar.Icon
-            icon={"bookmark-outline"}
+            icon={isSaved() ? "bookmark" : "bookmark-outline"}
             size={40}
             style={{
               backgroundColor: colors.color2,

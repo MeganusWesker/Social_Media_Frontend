@@ -9,6 +9,18 @@ export const toggleColor = (toggleBorderColor,setToggleBorderColor,iconColor,set
       : setIconColor(colors.color8);
 };
 
+export const isLikedChecker = (item,userId) => {
+  let isLiked = false;
+
+  item.likes.forEach((item) => {
+    if (item._id === userId) {
+      isLiked = true;
+    }
+  });
+
+  return isLiked;
+};
+
 export const dateCalculator = (postDate) => {
   const yearDifference =
     new Date().getFullYear() - new Date(postDate).getFullYear();
