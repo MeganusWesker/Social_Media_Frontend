@@ -24,8 +24,6 @@ import ChatBox from "./Screens/ChatBox";
 import NewChat from "./Screens/NewChat";
 import AddVideoPost from "./Screens/AddVideoPost";
 import Notifications from "./Screens/Notifications";
-import { RTCPeerConnection, RTCView, mediaDevices } from "react-native-webrtc";
-import { getMediaFromUserAndCreateIceServer } from "./utils/webRtc";
 import socket from "./utils/socket";
 import CallNotificationComponent from "./Components/CallNotificationComponent";
 import VideoCallComponent from "./Screens/VideoCallComponent";

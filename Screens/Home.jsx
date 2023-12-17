@@ -13,7 +13,6 @@ import {
 } from "../redux/actions/postAction";
 import { useMessageAndErrorPostWithoutNavigating } from "../utils/customHooks";
 import { dateCalculator } from "../utils/toggleFunctions";
-import Loader from "../Components/Loader";
 import socket from "../utils/socket";
 import { getNewMessageIndication } from "../redux/actions/chatAction";
 
